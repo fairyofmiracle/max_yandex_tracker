@@ -1,27 +1,20 @@
 # MAX Tracker Agent
 
-On-premise **AI agent** for creating Yandex Tracker issues from MAX messenger (text or voice).
+Онпрем-агент: создаёт задачи в Яндекс Трекере из MAX (текст или голос).
 
-Not a FAQ chatbot: the agent understands the request, calls tools, shows a confirmation card, then creates the task in Tracker.
+Не FAQ-бот: разбирает запрос, дергает тулы, показывает карточку подтверждения и только потом создаёт задачу.
 
 ```text
-MAX (text/voice)
-  → STT GigaAM (Sber, on-prem)
-  → Agent loop (local LLM + tools)
-  → Confirmation card
+MAX (текст/голос)
+  → STT GigaAM (on-prem)
+  → агент (локальная LLM + tools)
+  → карточка подтверждения
   → Yandex Tracker API
 ```
 
-## Why this design
+STT и LLM работают внутри периметра. Задача уходит в Трекер только после явного «да».
 
-| Principle | Implementation |
-|-----------|----------------|
-| Data stays in perimeter | STT + LLM run on-prem; no public cloud inference |
-| Agent, not templates | Tool-calling: draft → clarify → confirm → create |
-| Human-in-the-loop | Task is created only after explicit confirmation |
-| Safe to share | This repo has **no secrets**, no production employees, dry-run demos |
-
-## Quick start
+## Быстрый старт
 
 ```bash
 python3 -m venv .venv
@@ -33,40 +26,36 @@ pytest -q
 python -m bot.demo_cli "Создай задачу подготовить отчёт на Иванова до пятницы" --confirm
 ```
 
-Demo HTTP API (no MAX token required):
+HTTP-демо (без токена MAX):
 
 ```bash
 uvicorn bot.main:app --host 127.0.0.1 --port 8013
 curl -s http://127.0.0.1:8013/ping
 ```
 
-## Agent tools
+## Тулы
 
-| Tool | Role |
-|------|------|
-| `search_assignee` | Resolve name / diminutive via org aliases |
-| `parse_deadline` | Extract deadlines from Russian phrases |
-| `draft_task` | Build issue fields |
-| `ask_clarification` | Ask when assignee/intent is unclear |
-| `confirm_draft` | Show confirmation card (**no side effects**) |
-| `create_task` | Create in Tracker **only if confirmed** |
-| `list_my_tasks` | List open issues in natural language |
+| Tool | Зачем |
+|------|--------|
+| `search_assignee` | Имя / уменьшительное → логин |
+| `parse_deadline` | Дедлайны из русских фраз |
+| `draft_task` | Поля задачи |
+| `ask_clarification` | Уточнить, если чего-то не хватает |
+| `confirm_draft` | Карточка подтверждения (без сайд-эффектов) |
+| `create_task` | Создать в Трекере только после confirm |
+| `list_my_tasks` | Список открытых задач |
+| `add_comment` | Комментарий к задаче |
+| `update_deadline` | Обновить срок |
 
-## STT: GigaAM (Sber)
+## STT: GigaAM
 
-Speech recognition uses open-source [GigaAM](https://github.com/salute-developers/GigaAM) deployed on-prem.
+Распознавание через [GigaAM](https://github.com/salute-developers/GigaAM) on-prem.
 
-```bash
-# on GPU host
-git clone https://github.com/salute-developers/GigaAM.git
-cd GigaAM && pip install -e ".[torch]"
-```
-
-Without weights, the scaffold uses a safe stub (`STT_ALLOW_STUB=1`) so demos and CI still run.
+Если весов нет, можно `STT_ALLOW_STUB=1` — для локальных прогонов и CI.
 
 ## LLM
 
-Local OpenAI-compatible endpoint (e.g. Gemma via llama-server). Configure in `.env`:
+Локальный OpenAI-compatible endpoint (например Gemma через llama-server). В `.env`:
 
 ```env
 LLM_API_BASE_URL=http://127.0.0.1:10000
@@ -74,31 +63,26 @@ LLM_CHAT_URL=http://127.0.0.1:10000/v1/chat/completions
 LLM_MODEL=gemma-local
 ```
 
-## Repository layout
+## Структура
 
 ```text
-agent/     agent loop, system prompt
-stt/       GigaAM adapter + stub
-tools/     Tracker/dialog tools
-bot/       FastAPI skeleton + CLI demo
-docs/      architecture, roadmap, demo script
-tests/     unit tests
+agent/   цикл агента, system prompt
+stt/     GigaAM + stub
+tools/   тулы Трекера / диалога
+bot/     FastAPI + CLI
+docs/    архитектура, roadmap
+tests/   тесты
 ```
 
-## Security
+## Безопасность
 
-- Never commit `.env`
-- Production tokens, org directories, and internal URLs stay in a private contour
-- This public scaffold is intentionally dry-run by default
+`.env` и прод-токены в репозиторий не кладём. Подробности — [SECURITY.md](SECURITY.md).
 
-See [SECURITY.md](SECURITY.md).
-
-## Docs
+## Документация
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
-- [Demo recording tips](docs/DEMO.md)
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — [LICENSE](LICENSE).

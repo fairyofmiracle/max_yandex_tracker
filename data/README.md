@@ -1,2 +1,3 @@
-# Place for local sqlite / generated aliases (gitignored patterns in parent).
-# Example aliases: run scripts/generate_demo_aliases.py
+# Демо-алиасы (не прод).
+# Сгенерировать: python scripts/generate_demo_aliases.py
+# Поиск читает assignee_org_aliases.json или *.example.json

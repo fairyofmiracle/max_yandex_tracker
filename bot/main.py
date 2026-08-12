@@ -1,4 +1,4 @@
-"""Minimal FastAPI skeleton — no secrets required to import/start in dry mode."""
+"""FastAPI: демо-чат без секретов. Webhook MAX — отдельно, из прода."""
 
 from __future__ import annotations
 
@@ -19,16 +19,16 @@ from bot.settings import get_settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("max_tracker_agent")
 
-app = FastAPI(title="MAX Tracker Agent v2", version="0.1.0")
+app = FastAPI(title="MAX Tracker Agent", version="0.1.0")
 
-# In-memory sessions for scaffold demos (replace with Redis/DB in prod port)
+# сессии в памяти; в проде — Redis
 _SESSIONS: dict[str, TrackerAgent] = {}
 
 
 class ChatIn(BaseModel):
     user_id: str = "demo"
-    text: str = Field(..., min_length=1)
-    action: str | None = None  # confirm_create | change_assignee
+    text: str = ""
+    action: str | None = None  # confirm_create | change_assignee | cancel
 
 
 class ChatOut(BaseModel):
@@ -51,25 +51,30 @@ def _agent_for(user_id: str) -> TrackerAgent:
 
 @app.get("/ping")
 async def ping():
-    return {"status": "ok", "service": "max_tracker_agent_v2"}
+    return {"status": "ok", "service": "max_tracker_agent"}
 
 
 @app.post("/demo/chat", response_model=ChatOut)
 async def demo_chat(body: ChatIn):
-    """Local demo endpoint — does not call real MAX/Tracker."""
+    """Локальное демо — без реальных MAX/Трекера."""
     agent = _agent_for(body.user_id)
-    if body.action == "confirm_create":
+    action = (body.action or "").strip().lower()
+
+    if action == "confirm_create":
         result = agent.confirm_create()
+    elif action == "change_assignee":
+        hint = (body.text or "").strip()
+        result = agent.apply_assignee(hint) if hint else agent.request_assignee_change()
+    elif action == "cancel":
+        result = agent.cancel()
     else:
+        if not (body.text or "").strip():
+            return ChatOut(status="error", message="Пустое сообщение")
         result = agent.handle_user_text(body.text)
+
     return ChatOut(
         status=result.status,
         message=result.message,
         buttons=result.buttons,
         draft=result.draft,
     )
-
-
-# Placeholder: real MAX webhook will be ported from max_yandex_tracker carefully
-# @app.post("/webhook")
-# async def max_webhook(...): ...

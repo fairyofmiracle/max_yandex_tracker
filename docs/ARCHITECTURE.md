@@ -1,35 +1,76 @@
 # Architecture
 
-## Confirmation gate (required)
+## Оригинал (прод)
+
+Бот в MAX: пользователь пишет текстом или кидает голосовое → агент собирает задачу → показывает карточку → только после «Создать» уходит в Яндекс Трекер.
+
+```text
+MAX (webhook)
+  → проверка secret / auth
+  → голос → GigaAM (GPU, on-prem) → текст
+  → локальная LLM + tools
+  → карточка в чате MAX
+  → по кнопке: создать / сменить исполнителя / отмена
+  → create → Yandex Tracker API (реальный issue)
+```
+
+Как идёт диалог:
+
+1. Сообщение приходит на webhook MAX (с секретом).
+2. Если голос — GigaAM на своей машине, наружу аудио не уходит.
+3. LLM через tool-calling: `search_assignee`, `parse_deadline`, `draft_task`, при необходимости `ask_clarification`.
+4. Исполнителей берёт только из орг-словаря, логины не выдумывает.
+5. Перед созданием — `confirm_draft`: карточка с названием, описанием, исполнителем, сроком.
+6. Кнопки: создать / сменить исполнителя / отмена.
+7. `create_task` без подтверждения не вызывается.
+8. Сессия пользователя (черновик, шаги) — в Redis.
+9. После создания можно комментировать и двигать срок (`add_comment`, `update_deadline`).
+
+Зоны в проде:
+
+| Зона | Что |
+|------|-----|
+| MAX | webhook + кнопки в чате |
+| Агент | FastAPI, сессии Redis, tools |
+| Инференс (LAN) | GigaAM, локальная LLM |
+| Учёт | Yandex Tracker API |
+
+Данные задачи и голос остаются во внутреннем контуре.
 
 ```mermaid
 flowchart TD
-  A[User text or voice] --> B[STT GigaAM on-prem]
-  B --> C[Agent tools / LLM]
-  C --> D{Slots enough?}
-  D -->|no| E[ask_clarification]
-  E --> A
-  D -->|yes| F[confirm_draft card]
-  F --> G{User confirms?}
-  G -->|yes| H[create_task Tracker API]
-  G -->|edit assignee| I[search_assignee]
-  I --> F
-  G -->|cancel| J[Stop]
+  A[MAX: текст или голос] --> B{Голос?}
+  B -->|да| C[GigaAM on-prem]
+  C --> D[LLM + tools]
+  B -->|нет| D
+  D --> E{Хватает слотов?}
+  E -->|нет| F[уточнение в чате]
+  F --> A
+  E -->|да| G[карточка confirm]
+  G --> H{Кнопка}
+  H -->|создать| I[Tracker API]
+  H -->|сменить исполнителя| J[search_assignee]
+  J --> G
+  H -->|отмена| K[сброс]
 ```
 
-Production bot already has this UX. This repo keeps the same contract in the tool layer: `create_task` fails unless confirmed.
+## Этот репозиторий — демо
 
-## Trust boundaries
+Здесь не прод-бот, а разбор логики и контракта тулов без секретов и без живого MAX/Трекера.
 
-| Zone | Components |
-|------|------------|
-| Messenger | MAX webhook (auth via secret) |
-| Agent runtime | FastAPI, session, tools |
-| Inference (LAN) | GigaAM STT, local LLM |
-| Systems of record | Yandex Tracker API |
+| В оригинале | В этом демо |
+|-------------|-------------|
+| webhook MAX + auth | `POST /demo/chat` и `bot/demo_cli` |
+| LLM tool-calling | эвристики в `agent/loop.py` (тот же набор тулов) |
+| реальный Tracker | dry-run, ключи вроде `DEMO-1` |
+| орг-справочник | `data/assignee_org_aliases*.json` (фейковые люди) |
+| Redis | словарь в памяти процесса |
+| GigaAM на GPU | адаптер есть, в демо можно stub |
 
-Audio and task text are processed inside the perimeter; they are not sent to public cloud STT/LLM APIs.
+Общее с продом: порядок шагов и правило «без confirm задачу не создаём» — то же самое в `tools/`.
 
-## Extending tools
+Запуск демо: CLI или `/demo/chat`. Секреты только в локальном `.env`, в git их нет.
 
-Add a handler in `tools/tracker_tools.py`, register it in `TOOL_SPECS` and `get_tool_handlers`, cover with a unit test in `tests/`.
+## Тулы
+
+Хендлер в `tools/tracker_tools.py` → `TOOL_SPECS` / `get_tool_handlers` → тест в `tests/`.

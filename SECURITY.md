@@ -1,18 +1,16 @@
-# Security Policy
+# Security
 
-## What this repository contains
+## В репозитории
 
-- Architecture and reference implementation of an on-prem AI agent
-- Demo aliases and dry-run Tracker responses
-- `.env.example` with **empty** credentials
+- код агента и тулов
+- демо-алиасы и dry-run ответы Трекера
+- `.env.example` без реальных креденшалов
 
-## What must never be committed
+## Не коммитить
 
-- `.env`, OAuth tokens, bot tokens, webhook secrets
-- Production employee directories / real org aliases
-- Internal hostnames, VPN-only URLs, customer data
-- Model weight dumps if license/policy forbids redistribution
+- `.env`, OAuth / bot-токены, webhook secrets
+- прод-справочник сотрудников / реальные алиасы
+- внутренние хосты, VPN-only URL, чужие данные
+- веса моделей, если лицензия/политика это запрещает
 
-## Reporting
-
-If you find a leaked secret in history, rotate credentials immediately and purge the commit from the remote.
+Если секрет уже попал в историю — сразу ротировать и вычистить из remote.

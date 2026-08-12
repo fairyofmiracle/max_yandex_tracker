@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Placeholder: generate demo assignee aliases (no production employee dump)."""
+"""Генерирует демо-файл орг-алиасов (без прод-сотрудников)."""
 
 from __future__ import annotations
 
@@ -14,10 +14,13 @@ EXAMPLE = {
         "иванов": "ivanov",
         "иванова": "ivanov",
         "саша": "alexandrov",
+        "александр": "alexandrov",
+        "петров": "petrov",
     },
     "people": [
         {"login": "ivanov", "display": "Иванов И.И."},
         {"login": "alexandrov", "display": "Александров А.А."},
+        {"login": "petrov", "display": "Петров П.П."},
     ],
 }
 

@@ -1,19 +1,19 @@
-# Roadmap v2
+# Roadmap
 
-## Done in this scaffold
-- [x] Repo without secrets (`.env.example` only)
-- [x] Tool specs + handlers
-- [x] Agent loop with **confirm before create**
-- [x] Clarify when assignee missing
-- [x] GigaAM adapter stub + install notes
-- [x] Demo CLI + `/demo/chat` API
-- [x] Unit tests
+## Сделано
 
-## Next
-- [ ] Install real GigaAM weights on GPU host
-- [ ] Wire LLM tool-calling (function calls) instead of heuristic draft
-- [ ] Port MAX webhook auth from prod carefully
-- [ ] Org aliases generator (anonymized fixtures in tests)
-- [ ] `add_comment` / `update_deadline` tools
-- [ ] Session store (Redis)
-- [ ] Private demo video for school case
+- [x] Спеки и хендлеры тулов
+- [x] Цикл агента: подтверждение перед созданием задачи
+- [x] Уточнение, если не указан исполнитель
+- [x] Адаптер GigaAM (on-prem STT)
+- [x] Demo CLI и `/demo/chat`
+- [x] Тулы `add_comment` и `update_deadline` (dry-run в демо)
+- [x] Генератор орг-алиасов + чтение из `data/*.json`
+- [x] В демо: `change_assignee` / `cancel`
+- [x] Юнит-тесты
+
+## Дальше
+
+- [ ] Нормальный tool-calling у LLM вместо эвристик
+- [ ] Auth webhook MAX как в проде
+- [ ] Сессии в Redis

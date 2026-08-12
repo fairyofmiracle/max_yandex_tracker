@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "hint_to_login": {
+    "иванов": "ivanov",
+    "иванова": "ivanov",
+    "саша": "alexandrov",
+    "александр": "alexandrov",
+    "петров": "petrov"
+  },
+  "people": [
+    {
+      "login": "ivanov",
+      "display": "Иванов И.И."
+    },
+    {
+      "login": "alexandrov",
+      "display": "Александров А.А."
+    },
+    {
+      "login": "petrov",
+      "display": "Петров П.П."
+    }
+  ]
+}
