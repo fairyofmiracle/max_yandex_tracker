@@ -1,0 +1,12 @@
+fastapi>=0.110
+uvicorn>=0.27
+httpx>=0.27
+pydantic>=2.6
+pydantic-settings>=2.2
+python-dotenv>=1.0
+pytest>=8.0
+pytest-asyncio>=0.23
+
+# Optional: install when wiring real GigaAM on a GPU host
+# See https://github.com/salute-developers/GigaAM
+# gigaam  # install from that repo: pip install -e ".[torch]"

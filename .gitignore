@@ -1,0 +1,39 @@
+# secrets & local env
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# models & heavy artifacts (download separately)
+models/
+*.gguf
+*.pt
+*.onnx
+*.bin
+*.ckpt
+gigaam_weights/
+whisper*/
+
+# runtime
+data/*.sqlite
+data/*.db
+logs/
+*.log
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
